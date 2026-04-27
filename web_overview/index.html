@@ -1,0 +1,977 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Karn AI — Local-First Desktop Intelligence</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #04060f;
+      --bg2: #070c1a;
+      --text: #e8efff;
+      --muted: #7b8fbe;
+      --dim: #3d4f7c;
+      --brand: #5b8fff;
+      --cyan: #38d9c0;
+      --violet: #9b7aff;
+      --danger: #ff6b8a;
+      --border: rgba(100, 140, 255, 0.18);
+      --glass: rgba(10, 18, 40, 0.65);
+      --shadow: 0 30px 80px rgba(0,0,0,0.6);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    /* ── SCENE BACKGROUND ── */
+    .scene-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .scene-bg::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 900px 600px at 10% -5%, rgba(91,143,255,0.22) 0%, transparent 60%),
+        radial-gradient(ellipse 700px 500px at 90% 15%, rgba(56,217,192,0.15) 0%, transparent 55%),
+        radial-gradient(ellipse 500px 400px at 50% 80%, rgba(155,122,255,0.12) 0%, transparent 60%);
+    }
+
+    /* grid lines */
+    .scene-bg::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(100,140,255,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(100,140,255,0.05) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse 80% 70% at 50% 0%, black 30%, transparent 80%);
+    }
+
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.22;
+      animation: drift 10s ease-in-out infinite;
+    }
+    .orb-1 { width: 500px; height: 500px; background: #5b8fff; top: -180px; left: -120px; animation-delay: 0s; }
+    .orb-2 { width: 400px; height: 400px; background: #38d9c0; top: 100px; right: -100px; animation-delay: 3s; }
+    .orb-3 { width: 300px; height: 300px; background: #9b7aff; bottom: 10%; left: 30%; animation-delay: 6s; }
+    @keyframes drift {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(20px, 30px) scale(1.05); }
+    }
+
+    /* ── LAYOUT ── */
+    .wrap { max-width: 1200px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 14px 0;
+      background: rgba(4,6,15,0.75);
+      backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--border);
+    }
+    nav .inner { display: flex; align-items: center; justify-content: space-between; max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+    .nav-brand { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.25rem; color: var(--text); text-decoration: none; letter-spacing: -0.5px; }
+    .nav-brand span { color: var(--cyan); }
+    .nav-links { display: flex; gap: 28px; list-style: none; }
+    .nav-links a { color: var(--muted); text-decoration: none; font-size: 0.92rem; font-weight: 500; transition: color 0.2s; }
+    .nav-links a:hover { color: var(--text); }
+    .nav-cta { background: var(--brand); color: white; padding: 8px 16px; border-radius: 8px; font-size: 0.88rem; font-weight: 600; text-decoration: none; transition: opacity 0.2s, transform 0.2s; }
+    .nav-cta:hover { opacity: 0.85; transform: translateY(-1px); }
+
+    /* ── HERO ── */
+    .hero { padding: 120px 0 80px; text-align: center; }
+
+    .hero-eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      border: 1px solid rgba(56,217,192,0.35);
+      background: rgba(56,217,192,0.07);
+      color: var(--cyan);
+      padding: 6px 14px; border-radius: 999px;
+      font-size: 0.82rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase;
+      margin-bottom: 28px;
+      animation: fadeUp 0.7s ease both;
+    }
+    .hero-eyebrow::before { content: "●"; font-size: 0.55rem; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    .hero h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2.8rem, 6vw, 5rem);
+      font-weight: 800;
+      line-height: 1.08;
+      letter-spacing: -2px;
+      animation: fadeUp 0.7s 0.1s ease both;
+      max-width: 900px;
+      margin: 0 auto 20px;
+    }
+    .hero h1 .grad {
+      background: linear-gradient(100deg, #5b8fff, #38d9c0 50%, #9b7aff);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+
+    .hero-sub {
+      color: var(--muted); font-size: 1.1rem; max-width: 680px; margin: 0 auto 36px;
+      line-height: 1.7; animation: fadeUp 0.7s 0.2s ease both;
+    }
+
+    .hero-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; animation: fadeUp 0.7s 0.3s ease both; }
+    .btn-primary {
+      background: linear-gradient(135deg, #5b8fff, #4a7ee8);
+      color: white; padding: 13px 26px; border-radius: 11px;
+      font-weight: 700; font-size: 0.95rem; text-decoration: none;
+      box-shadow: 0 8px 28px rgba(91,143,255,0.4);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 14px 36px rgba(91,143,255,0.5); }
+    .btn-ghost {
+      color: var(--text); padding: 13px 26px; border-radius: 11px;
+      border: 1px solid var(--border); font-weight: 600; font-size: 0.95rem; text-decoration: none;
+      background: rgba(255,255,255,0.03); backdrop-filter: blur(8px);
+      transition: background 0.2s, transform 0.2s;
+    }
+    .btn-ghost:hover { background: rgba(255,255,255,0.07); transform: translateY(-2px); }
+
+    /* ── HERO STATS ── */
+    .hero-stats {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px;
+      background: var(--border); border: 1px solid var(--border); border-radius: 16px;
+      overflow: hidden; margin-top: 60px;
+      animation: fadeUp 0.7s 0.4s ease both;
+    }
+    .stat {
+      background: var(--bg2); padding: 20px 24px;
+      transition: background 0.25s;
+    }
+    .stat:hover { background: rgba(91,143,255,0.08); }
+    .stat-val { font-family: 'Syne', sans-serif; font-size: 1.6rem; font-weight: 800; color: var(--cyan); }
+    .stat-label { font-size: 0.83rem; color: var(--muted); margin-top: 3px; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── SECTION ── */
+    section { padding: 80px 0; }
+    .section-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem; color: var(--brand); letter-spacing: 2px;
+      text-transform: uppercase; margin-bottom: 12px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .section-label::before { content: "//"; color: var(--dim); }
+    h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+      font-weight: 800; letter-spacing: -1px; margin-bottom: 12px;
+    }
+    .section-desc { color: var(--muted); font-size: 1rem; max-width: 680px; line-height: 1.7; margin-bottom: 48px; }
+
+    /* ── 3D FEATURE CARDS ── */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      perspective: 1200px;
+    }
+    .feat-card {
+      position: relative;
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 28px 24px;
+      backdrop-filter: blur(12px);
+      overflow: hidden;
+      cursor: default;
+      transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.4s ease;
+      transform-style: preserve-3d;
+    }
+    .feat-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at var(--mx,50%) var(--my,50%), rgba(91,143,255,0.12) 0%, transparent 65%);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .feat-card:hover { transform: rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)) translateZ(8px); box-shadow: 0 30px 60px rgba(0,0,0,0.5); }
+    .feat-card:hover::before { opacity: 1; }
+
+    .feat-icon {
+      width: 46px; height: 46px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem; margin-bottom: 18px;
+      position: relative; z-index: 1;
+    }
+    .feat-card h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.05rem; font-weight: 700;
+      margin-bottom: 10px; color: var(--text);
+      position: relative; z-index: 1;
+    }
+    .feat-card p {
+      color: var(--muted); font-size: 0.9rem; line-height: 1.65;
+      position: relative; z-index: 1;
+    }
+    .feat-card .tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 16px; position: relative; z-index: 1; }
+    .tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem; padding: 3px 9px; border-radius: 6px;
+      border: 1px solid; opacity: 0.85;
+    }
+
+    /* Card accent colors */
+    .feat-card[data-accent="blue"] .feat-icon { background: rgba(91,143,255,0.15); }
+    .feat-card[data-accent="blue"] .tag { border-color: rgba(91,143,255,0.4); color: #7aaeff; background: rgba(91,143,255,0.1); }
+    .feat-card[data-accent="cyan"] .feat-icon { background: rgba(56,217,192,0.12); }
+    .feat-card[data-accent="cyan"] .tag { border-color: rgba(56,217,192,0.4); color: #38d9c0; background: rgba(56,217,192,0.1); }
+    .feat-card[data-accent="violet"] .feat-icon { background: rgba(155,122,255,0.12); }
+    .feat-card[data-accent="violet"] .tag { border-color: rgba(155,122,255,0.4); color: #b89aff; background: rgba(155,122,255,0.1); }
+    .feat-card[data-accent="pink"] .feat-icon { background: rgba(255,107,138,0.12); }
+    .feat-card[data-accent="pink"] .tag { border-color: rgba(255,107,138,0.4); color: #ff8aa5; background: rgba(255,107,138,0.1); }
+
+    /* Featured big card */
+    .feat-card.big { grid-column: span 2; }
+
+    /* ── ARCHITECTURE ── */
+    .arch-section { background: linear-gradient(180deg, transparent, rgba(10,18,40,0.6) 30%, rgba(10,18,40,0.6) 70%, transparent); }
+    .arch-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; }
+
+    .arch-flow { display: flex; flex-direction: column; gap: 0; }
+    .arch-step {
+      display: flex; gap: 18px; align-items: flex-start;
+      padding: 20px 0; border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+    .arch-step:last-child { border-bottom: none; }
+    .step-num {
+      flex-shrink: 0;
+      width: 36px; height: 36px; border-radius: 10px;
+      background: rgba(91,143,255,0.15); border: 1px solid rgba(91,143,255,0.3);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.8rem;
+      color: var(--brand); font-weight: 600;
+    }
+    .step-body h4 { font-family: 'Syne', sans-serif; font-size: 0.95rem; margin-bottom: 4px; }
+    .step-body p { color: var(--muted); font-size: 0.88rem; line-height: 1.6; }
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      background: rgba(91,143,255,0.1); border: 1px solid rgba(91,143,255,0.2);
+      color: #9ab5ff; border-radius: 6px; padding: 1px 7px; font-size: 0.85em;
+    }
+
+    /* ── COMMANDS SHOWCASE ── */
+    .commands-section { }
+    .cmd-demo {
+      background: #050c1f;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+    .cmd-bar {
+      background: rgba(255,255,255,0.03);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 18px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .dot { width: 11px; height: 11px; border-radius: 50%; }
+    .dot-r { background: #ff6b8a; } .dot-y { background: #ffd166; } .dot-g { background: #38d9c0; }
+    .cmd-title-bar { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(--dim); margin-left: 6px; }
+
+    .cmd-list { padding: 24px; display: flex; flex-direction: column; gap: 8px; }
+    .cmd-row {
+      display: flex; align-items: flex-start; gap: 14px;
+      padding: 12px 16px; border-radius: 10px;
+      background: rgba(255,255,255,0.025);
+      border: 1px solid transparent;
+      transition: border-color 0.2s, background 0.2s;
+      cursor: default;
+    }
+    .cmd-row:hover { border-color: var(--border); background: rgba(91,143,255,0.06); }
+    .cmd-prompt { font-family: 'JetBrains Mono', monospace; color: var(--cyan); font-size: 0.75rem; padding-top: 2px; flex-shrink: 0; }
+    .cmd-text { font-family: 'JetBrains Mono', monospace; font-size: 0.88rem; color: #c8d8ff; }
+    .cmd-note { font-size: 0.8rem; color: var(--muted); margin-top: 3px; }
+
+    /* ── CONFIG TABLE ── */
+    .config-table {
+      width: 100%; border-collapse: collapse;
+      background: var(--bg2); border: 1px solid var(--border); border-radius: 14px; overflow: hidden;
+    }
+    .config-table th {
+      text-align: left; padding: 12px 16px;
+      background: rgba(91,143,255,0.08);
+      font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(--brand);
+      border-bottom: 1px solid var(--border);
+    }
+    .config-table td { padding: 11px 16px; font-size: 0.88rem; border-bottom: 1px solid rgba(100,140,255,0.08); vertical-align: top; }
+    .config-table tr:last-child td { border-bottom: none; }
+    .config-table tr:hover td { background: rgba(91,143,255,0.04); }
+    .env-key { font-family: 'JetBrains Mono', monospace; color: #9ab5ff; font-size: 0.82rem; }
+    .env-default { font-family: 'JetBrains Mono', monospace; color: var(--cyan); font-size: 0.82rem; }
+    td.muted { color: var(--muted); font-size: 0.85rem; }
+
+    /* ── QUICKSTART ── */
+    .qs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .qs-panel {
+      background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; overflow: hidden;
+    }
+    .qs-head {
+      padding: 14px 18px; border-bottom: 1px solid var(--border);
+      font-family: 'Syne', sans-serif; font-size: 0.9rem; font-weight: 700;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .qs-body { padding: 18px; }
+    pre {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem; line-height: 1.7; color: #b8ccff;
+      white-space: pre-wrap; overflow-x: auto;
+    }
+    pre .comment { color: #3d5a8a; }
+    pre .cmd { color: var(--cyan); }
+    pre .flag { color: #9b7aff; }
+
+    .qs-steps { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+    .qs-steps li {
+      display: flex; gap: 14px; align-items: flex-start;
+      padding: 12px; background: rgba(255,255,255,0.025); border-radius: 10px;
+      font-size: 0.9rem; color: var(--muted);
+    }
+    .qs-steps li strong { color: var(--text); display: block; margin-bottom: 2px; font-size: 0.88rem; }
+    .qs-num {
+      flex-shrink: 0; width: 24px; height: 24px; border-radius: 7px;
+      background: rgba(91,143,255,0.15); color: var(--brand);
+      font-family: 'JetBrains Mono', monospace; font-size: 0.75rem;
+      display: flex; align-items: center; justify-content: center; font-weight: 700;
+    }
+
+    /* ── SECURITY ── */
+    .sec-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .sec-card {
+      background: rgba(255,107,138,0.06); border: 1px solid rgba(255,107,138,0.2); border-radius: 14px; padding: 22px;
+    }
+    .sec-card h4 { font-family: 'Syne', sans-serif; font-size: 0.95rem; margin-bottom: 8px; color: #ff8aa5; }
+    .sec-card p { color: var(--muted); font-size: 0.87rem; line-height: 1.6; }
+
+    /* ── TROUBLE ── */
+    .trouble-grid { display: flex; flex-direction: column; gap: 0; }
+    .trouble-item {
+      padding: 20px 0; border-bottom: 1px solid var(--border);
+      display: grid; grid-template-columns: 240px 1fr; gap: 24px;
+    }
+    .trouble-item:last-child { border-bottom: none; }
+    .trouble-tag { font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; color: var(--danger); background: rgba(255,107,138,0.08); border: 1px solid rgba(255,107,138,0.25); border-radius: 8px; padding: 3px 10px; display: inline-fit; align-self: flex-start; width: fit-content; }
+    .trouble-fix { color: var(--muted); font-size: 0.9rem; line-height: 1.65; }
+
+    /* ── CTA BANNER ── */
+    .cta-banner {
+      position: relative; overflow: hidden;
+      background: linear-gradient(135deg, rgba(56,217,192,0.12), rgba(91,143,255,0.12));
+      border: 1px solid rgba(56,217,192,0.3); border-radius: 20px;
+      padding: 52px 48px; text-align: center; margin: 0 0 80px;
+    }
+    .cta-banner::before {
+      content: "";
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 60% 70% at 50% 0%, rgba(56,217,192,0.2) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .cta-banner h2 { font-size: clamp(1.6rem, 3vw, 2.4rem); margin-bottom: 12px; }
+    .cta-banner p { color: var(--muted); max-width: 560px; margin: 0 auto 28px; line-height: 1.7; }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 28px 0;
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 0.86rem; color: var(--muted);
+    }
+    footer a { color: var(--muted); text-decoration: none; }
+    footer a:hover { color: var(--text); }
+    .footer-brand { font-family: 'Syne', sans-serif; font-weight: 700; color: var(--text); font-size: 1rem; }
+    .footer-brand span { color: var(--cyan); }
+
+    /* ── DIVIDER ── */
+    .divider { height: 1px; background: linear-gradient(90deg, transparent, var(--border), transparent); margin: 0; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      .features-grid { grid-template-columns: 1fr 1fr; }
+      .feat-card.big { grid-column: span 2; }
+      .arch-grid, .qs-grid { grid-template-columns: 1fr; }
+      .trouble-item { grid-template-columns: 1fr; }
+      .sec-grid { grid-template-columns: 1fr; }
+      .hero-stats { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 600px) {
+      .features-grid { grid-template-columns: 1fr; }
+      .feat-card.big { grid-column: span 1; }
+      .hero-stats { grid-template-columns: 1fr 1fr; }
+      nav .nav-links { display: none; }
+      footer { flex-direction: column; gap: 12px; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="scene-bg">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="inner">
+    <a class="nav-brand" href="#">Karn<span> AI</span></a>
+    <ul class="nav-links">
+      <li><a href="#features">Features</a></li>
+      <li><a href="#architecture">Architecture</a></li>
+      <li><a href="#commands">Commands</a></li>
+      <li><a href="#config">Config</a></li>
+      <li><a href="#quickstart">Quick Start</a></li>
+    </ul>
+    <a class="nav-cta" href="#quickstart">Get Started →</a>
+  </div>
+</nav>
+
+<div class="wrap">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-eyebrow">Local-First Desktop Intelligence</div>
+    <h1>Your Desktop.<br><span class="grad">Voice-Driven. Always Local.</span></h1>
+    <p class="hero-sub">
+      Karn AI blends deterministic command parsing with Ollama-based LLM fallback — so simple actions stay
+      fast and predictable while open-ended requests remain fully flexible. No cloud. No latency. No compromise.
+    </p>
+    <div class="hero-actions">
+      <a class="btn-primary" href="#quickstart">Start in 3 steps</a>
+      <a class="btn-ghost" href="#features">Explore features</a>
+      <a class="btn-ghost" href="https://ollama.ai" target="_blank">Get Ollama →</a>
+    </div>
+
+    <div class="hero-stats">
+      <div class="stat"><div class="stat-val">Offline</div><div class="stat-label">STT — Vosk + Whisper + VAD</div></div>
+      <div class="stat"><div class="stat-val">Local</div><div class="stat-label">All data stays on your machine</div></div>
+      <div class="stat"><div class="stat-val">Secure</div><div class="stat-label">Confirm-gated shell execution</div></div>
+      <div class="stat"><div class="stat-val">Learns</div><div class="stat-label">Persistent command memory</div></div>
+    </div>
+  </div>
+
+  <!-- FEATURES -->
+  <section id="features">
+    <div class="section-label">Features</div>
+    <h2>Everything you need to automate your desktop</h2>
+    <p class="section-desc">Six core capability pillars — from offline speech to screen-aware OCR — all running locally with zero cloud dependency.</p>
+
+    <div class="features-grid" id="featGrid">
+
+      <div class="feat-card big" data-accent="blue">
+        <div class="feat-icon">🎙️</div>
+        <h3>Offline Speech-to-Text Pipeline</h3>
+        <p>
+          Karn AI listens continuously using a multi-engine offline STT stack. The <strong>Vosk</strong> model handles
+          real-time partial transcripts for responsive feedback, while <strong>Whisper</strong> provides high-accuracy
+          final transcriptions. A <strong>Voice Activity Detection (VAD)</strong> layer ensures the microphone only
+          activates during actual speech — cutting false triggers and preserving CPU. The result is a hands-free
+          command loop with sub-second recognition that works entirely without internet.
+        </p>
+        <div class="tag-row">
+          <span class="tag">Vosk real-time</span>
+          <span class="tag">Whisper accuracy</span>
+          <span class="tag">VAD gate</span>
+          <span class="tag">Offline only</span>
+        </div>
+      </div>
+
+      <div class="feat-card" data-accent="cyan">
+        <div class="feat-icon">🖥️</div>
+        <h3>Desktop Automation</h3>
+        <p>
+          Open and close applications by name, click any pixel coordinate on screen,
+          type text into focused windows, take screenshots, and chain multiple actions
+          in a single command using natural language connectors like <code>and then</code>.
+        </p>
+        <div class="tag-row">
+          <span class="tag">App launch</span>
+          <span class="tag">Click coords</span>
+          <span class="tag">Type text</span>
+          <span class="tag">Chain actions</span>
+        </div>
+      </div>
+
+      <div class="feat-card" data-accent="violet">
+        <div class="feat-icon">🔍</div>
+        <h3>Screen-Aware OCR</h3>
+        <p>
+          Detect and click text visible anywhere on screen, extract all email addresses from the
+          current view, summarize on-screen content, and auto-fill forms with stored profile data —
+          all powered by Tesseract OCR.
+        </p>
+        <div class="tag-row">
+          <span class="tag">Click-on-text</span>
+          <span class="tag">Email extract</span>
+          <span class="tag">Autofill</span>
+          <span class="tag">Tesseract</span>
+        </div>
+      </div>
+
+      <div class="feat-card" data-accent="cyan">
+        <div class="feat-icon">🌐</div>
+        <h3>Web & Browser Automation</h3>
+        <p>
+          Fire one-liners to search Google, open YouTube and queue a search, jump to Wikipedia
+          articles, navigate GitHub repos, or open Maps — all via voice or text. WhatsApp automation
+          (<code>send_whatsapp_message</code>) is built in too.
+        </p>
+        <div class="tag-row">
+          <span class="tag">Google</span>
+          <span class="tag">YouTube</span>
+          <span class="tag">GitHub</span>
+          <span class="tag">WhatsApp</span>
+        </div>
+      </div>
+
+      <div class="feat-card" data-accent="violet">
+        <div class="feat-icon">🧠</div>
+        <h3>Memory & Learned Commands</h3>
+        <p>
+          Teach Karn a custom shortcut once using natural language: <em>"when I say X, do Y"</em>.
+          Mappings persist across sessions in a local JSON store so your personal vocabulary
+          grows with every use.
+        </p>
+        <div class="tag-row">
+          <span class="tag">Teach once</span>
+          <span class="tag">Persistent</span>
+          <span class="tag">JSON store</span>
+        </div>
+      </div>
+
+      <div class="feat-card" data-accent="pink">
+        <div class="feat-icon">🔐</div>
+        <h3>PowerShell Confirm Mode</h3>
+        <p>
+          Shell commands are queued behind a nonce-based confirmation gate. An optional passphrase
+          adds a second layer for destructive operations. Execution only proceeds after explicit
+          human approval — no silent automation of risky commands.
+        </p>
+        <div class="tag-row">
+          <span class="tag">Nonce gate</span>
+          <span class="tag">Passphrase</span>
+          <span class="tag">Queue</span>
+        </div>
+      </div>
+
+      <div class="feat-card big" data-accent="blue">
+        <div class="feat-icon">⚡</div>
+        <h3>Dual-Engine Intelligence — Deterministic + LLM</h3>
+        <p>
+          Common phrases like <code>open notepad</code> or <code>create folder</code> never touch the LLM — they hit
+          a fast deterministic parser (<code>core/commands.py</code>) for zero-latency response. When a request
+          falls outside predefined patterns, <code>brain/llm.py</code> forwards it to your local <strong>Ollama</strong> model,
+          normalizes the JSON response, and routes the resulting action. This hybrid means speed for daily tasks
+          and flexibility for open-ended queries — with all inference running on your own hardware.
+        </p>
+        <div class="tag-row">
+          <span class="tag">Deterministic fast path</span>
+          <span class="tag">Ollama fallback</span>
+          <span class="tag">JSON normalization</span>
+          <span class="tag">llama2 / any model</span>
+        </div>
+      </div>
+
+      <div class="feat-card" data-accent="blue">
+        <div class="feat-icon">🌀</div>
+        <h3>Web Control Panel</h3>
+        <p>
+          A lightweight Flask server (<code>web_panel.py</code>) exposes browser-based control:
+          monitor assistant status, send text commands, toggle voice mode, and call API endpoints
+          — reachable at <code>http://127.0.0.1:5000</code>.
+        </p>
+        <div class="tag-row">
+          <span class="tag">Flask API</span>
+          <span class="tag">Voice toggle</span>
+          <span class="tag">Status monitor</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ARCHITECTURE -->
+  <section id="architecture" class="arch-section">
+    <div class="section-label">Architecture</div>
+    <h2>How it all fits together</h2>
+    <p class="section-desc">Five modules, one cohesive runtime. Each layer has a single clear responsibility.</p>
+
+    <div class="arch-grid">
+      <div class="arch-flow">
+        <div class="arch-step">
+          <div class="step-num">01</div>
+          <div class="step-body">
+            <h4><code>core/commands.py</code> — Fast Parser</h4>
+            <p>Pattern-matches incoming text against a library of deterministic phrases. Handles the 80% of common commands
+              instantly without touching the LLM, keeping latency near zero for everyday tasks.</p>
+          </div>
+        </div>
+        <div class="arch-step">
+          <div class="step-num">02</div>
+          <div class="step-body">
+            <h4><code>brain/llm.py</code> — LLM Fallback</h4>
+            <p>For unrecognized requests, this module calls your local Ollama instance, normalizes the JSON action
+              response, validates it, and returns a structured intent that the action layer can execute.</p>
+          </div>
+        </div>
+        <div class="arch-step">
+          <div class="step-num">03</div>
+          <div class="step-body">
+            <h4><code>core/actions.py</code> — Task Executor</h4>
+            <p>Receives structured action objects and carries out desktop operations: subprocess calls, PyAutoGUI
+              interactions, OCR queries, and browser navigation — all returning structured result objects.</p>
+          </div>
+        </div>
+        <div class="arch-step">
+          <div class="step-num">04</div>
+          <div class="step-body">
+            <h4><code>core/assistant_service.py</code> — Orchestrator</h4>
+            <p>Central runtime that stitches together the voice loop, memory persistence, command routing between
+              the fast parser and LLM fallback, and retry logic with configurable delays.</p>
+          </div>
+        </div>
+        <div class="arch-step">
+          <div class="step-num">05</div>
+          <div class="step-body">
+            <h4><code>web_panel.py</code> — Control Panel</h4>
+            <p>Flask app that exposes REST endpoints for the browser UI — status checks, manual command injection,
+              voice mode toggling, and real-time log streaming.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: flow diagram -->
+      <div style="display:flex;align-items:center;justify-content:center;">
+        <svg viewBox="0 0 340 520" width="340" height="520" xmlns="http://www.w3.org/2000/svg" style="max-width:100%">
+          <defs>
+            <filter id="glow">
+              <feGaussianBlur stdDeviation="3" result="blur"/>
+              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <linearGradient id="lBlue" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#5b8fff" stop-opacity="0.9"/>
+              <stop offset="100%" stop-color="#4a7ee8" stop-opacity="0.9"/>
+            </linearGradient>
+            <linearGradient id="lCyan" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#38d9c0" stop-opacity="0.9"/>
+              <stop offset="100%" stop-color="#2ab89f" stop-opacity="0.9"/>
+            </linearGradient>
+            <linearGradient id="lVio" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#9b7aff" stop-opacity="0.9"/>
+              <stop offset="100%" stop-color="#7a5be0" stop-opacity="0.9"/>
+            </linearGradient>
+          </defs>
+
+          <!-- Voice input -->
+          <rect x="90" y="10" width="160" height="44" rx="12" fill="url(#lBlue)" filter="url(#glow)"/>
+          <text x="170" y="37" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12" fill="white">🎙 Voice / Text</text>
+
+          <!-- Arrow 1 -->
+          <line x1="170" y1="54" x2="170" y2="86" stroke="#5b8fff" stroke-width="2" stroke-dasharray="4 3" opacity="0.7"/>
+          <polygon points="165,84 170,94 175,84" fill="#5b8fff" opacity="0.7"/>
+
+          <!-- Fast parser -->
+          <rect x="20" y="94" width="140" height="44" rx="12" fill="rgba(91,143,255,0.2)" stroke="rgba(91,143,255,0.5)" stroke-width="1"/>
+          <text x="90" y="121" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" fill="#a0bfff">commands.py</text>
+
+          <!-- LLM box -->
+          <rect x="180" y="94" width="140" height="44" rx="12" fill="rgba(155,122,255,0.15)" stroke="rgba(155,122,255,0.45)" stroke-width="1"/>
+          <text x="250" y="121" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" fill="#c0a8ff">brain/llm.py</text>
+
+          <!-- Arrows from parser and llm to actions -->
+          <line x1="90" y1="138" x2="90" y2="164" stroke="#5b8fff" stroke-width="1.5" opacity="0.5"/>
+          <line x1="250" y1="138" x2="250" y2="164" stroke="#9b7aff" stroke-width="1.5" opacity="0.5"/>
+          <line x1="90" y1="164" x2="250" y2="164" stroke="rgba(100,140,255,0.3)" stroke-width="1.5"/>
+          <line x1="170" y1="164" x2="170" y2="192" stroke="rgba(100,140,255,0.6)" stroke-width="2"/>
+          <polygon points="165,190 170,200 175,190" fill="rgba(100,140,255,0.6)"/>
+
+          <!-- Actions -->
+          <rect x="70" y="200" width="200" height="44" rx="12" fill="url(#lCyan)" filter="url(#glow)" opacity="0.85"/>
+          <text x="170" y="227" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12" fill="#021a17">core/actions.py</text>
+
+          <!-- Arrow -->
+          <line x1="170" y1="244" x2="170" y2="276" stroke="#38d9c0" stroke-width="2" stroke-dasharray="4 3" opacity="0.7"/>
+          <polygon points="165,274 170,284 175,274" fill="#38d9c0" opacity="0.7"/>
+
+          <!-- Orchestrator -->
+          <rect x="50" y="284" width="240" height="44" rx="12" fill="rgba(56,217,192,0.12)" stroke="rgba(56,217,192,0.4)" stroke-width="1.5"/>
+          <text x="170" y="311" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" fill="#38d9c0">assistant_service.py</text>
+
+          <!-- Arrow -->
+          <line x1="170" y1="328" x2="170" y2="360" stroke="rgba(100,140,255,0.5)" stroke-width="2" stroke-dasharray="4 3" opacity="0.7"/>
+          <polygon points="165,358 170,368 175,358" fill="rgba(100,140,255,0.5)" opacity="0.7"/>
+
+          <!-- Memory -->
+          <rect x="20" y="368" width="130" height="44" rx="12" fill="rgba(155,122,255,0.15)" stroke="rgba(155,122,255,0.4)" stroke-width="1"/>
+          <text x="85" y="395" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" fill="#b89aff">🧠 Memory</text>
+
+          <!-- Web panel -->
+          <rect x="190" y="368" width="130" height="44" rx="12" fill="rgba(91,143,255,0.15)" stroke="rgba(91,143,255,0.4)" stroke-width="1"/>
+          <text x="255" y="395" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" fill="#9ab5ff">🌐 web_panel</text>
+
+          <!-- PS confirm at bottom -->
+          <line x1="85" y1="412" x2="85" y2="448" stroke="rgba(155,122,255,0.4)" stroke-width="1.5"/>
+          <line x1="255" y1="412" x2="255" y2="448" stroke="rgba(91,143,255,0.4)" stroke-width="1.5"/>
+          <line x1="85" y1="448" x2="255" y2="448" stroke="rgba(100,140,255,0.3)" stroke-width="1.5"/>
+          <line x1="170" y1="448" x2="170" y2="464" stroke="rgba(255,107,138,0.6)" stroke-width="2"/>
+          <polygon points="165,462 170,472 175,462" fill="rgba(255,107,138,0.6)"/>
+          <rect x="80" y="472" width="180" height="40" rx="12" fill="rgba(255,107,138,0.12)" stroke="rgba(255,107,138,0.35)" stroke-width="1.5"/>
+          <text x="170" y="497" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" fill="#ff8aa5">🔐 PS Confirm Gate</text>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- COMMANDS -->
+  <section id="commands">
+    <div class="section-label">Example Commands</div>
+    <h2>What can you say?</h2>
+    <p class="section-desc">A sample of the built-in command vocabulary. Combine or chain them — and teach your own.</p>
+
+    <div class="cmd-demo">
+      <div class="cmd-bar">
+        <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
+        <span class="cmd-title-bar">karn-ai — command interface</span>
+      </div>
+      <div class="cmd-list">
+        <div class="cmd-row"><span class="cmd-prompt">▶</span><div><div class="cmd-text">open notepad</div><div class="cmd-note">Launches Notepad via deterministic parser — no LLM call</div></div></div>
+        <div class="cmd-row"><span class="cmd-prompt">▶</span><div><div class="cmd-text">open youtube and then search lofi hip hop on youtube</div><div class="cmd-note">Chained action — browser open + search in one utterance</div></div></div>
+        <div class="cmd-row"><span class="cmd-prompt">▶</span><div><div class="cmd-text">create folder test</div><div class="cmd-note">Creates a new directory inside the project base path</div></div></div>
+        <div class="cmd-row"><span class="cmd-prompt">▶</span><div><div class="cmd-text">fill this form</div><div class="cmd-note">OCR scans form fields; autofills with KARN_PROFILE_* values</div></div></div>
+        <div class="cmd-row"><span class="cmd-prompt">▶</span><div><div class="cmd-text">extract all emails from this screen</div><div class="cmd-note">Tesseract scans visible content; returns all email addresses found</div></div></div>
+        <div class="cmd-row"><span class="cmd-prompt">▶</span><div><div class="cmd-text">when i say clean desktop, delete folder temp</div><div class="cmd-note">Teaches a custom mapping — persisted to memory_store.json</div></div></div>
+        <div class="cmd-row"><span class="cmd-prompt">▶</span><div><div class="cmd-text">ps: Get-Process | Select -First 5</div><div class="cmd-note">Queues a PowerShell command behind the confirm gate</div></div></div>
+        <div class="cmd-row"><span class="cmd-prompt">▶</span><div><div class="cmd-text">send whatsapp message to Mom — I'll be late</div><div class="cmd-note">WhatsApp automation via open_whatsapp + send_whatsapp_message</div></div></div>
+        <div class="cmd-row"><span class="cmd-prompt">▶</span><div><div class="cmd-text">summarize what's on screen</div><div class="cmd-note">LLM receives OCR-extracted screen text; returns a natural language summary</div></div></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- QUICKSTART -->
+  <section id="quickstart">
+    <div class="section-label">Quick Start</div>
+    <h2>Running in three steps</h2>
+    <p class="section-desc">Python 3.10+, a running Ollama daemon, and microphone access. That's all you need.</p>
+
+    <div class="qs-grid">
+      <div class="qs-panel">
+        <div class="qs-head">📦 Install &amp; Launch</div>
+        <div class="qs-body">
+<pre><span class="comment"># 1. Install Python dependencies</span>
+<span class="cmd">pip</span> install -r requirements.txt
+
+<span class="comment"># 2. Download offline STT models</span>
+<span class="cmd">python</span> setup_offline_stt.py
+
+<span class="comment"># 3. (Optional) Pull your LLM model</span>
+<span class="cmd">ollama</span> pull llama2
+
+<span class="comment"># 4. Start the assistant</span>
+<span class="cmd">python</span> main.py
+
+<span class="comment"># Or start only the web panel</span>
+<span class="cmd">python</span> web_panel.py</pre>
+        </div>
+      </div>
+
+      <div class="qs-panel">
+        <div class="qs-head">✅ Pre-flight Checklist</div>
+        <div class="qs-body">
+          <ul class="qs-steps">
+            <li><div class="qs-num">1</div><div><strong>Python 3.10+</strong>Verify with <code>python --version</code></div></li>
+            <li><div class="qs-num">2</div><div><strong>Ollama running</strong>Start the daemon: <code>ollama serve</code></div></li>
+            <li><div class="qs-num">3</div><div><strong>Microphone access</strong>Grant OS-level permission for your terminal</div></li>
+            <li><div class="qs-num">4</div><div><strong>Tesseract (optional)</strong>Required for OCR features — add to PATH</div></li>
+            <li><div class="qs-num">5</div><div><strong>Piper voice model</strong>Set <code>KARN_VOICE_MODEL_PATH</code> if using TTS</div></li>
+            <li><div class="qs-num">6</div><div><strong>Extra RAM / storage</strong>Whisper + Vosk models need ~2–4 GB</div></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- CONFIG -->
+  <section id="config">
+    <div class="section-label">Configuration</div>
+    <h2>Environment variables</h2>
+    <p class="section-desc">All config is driven by environment variables — no YAML, no config files. Legacy <code>MENU_*</code> vars are still supported.</p>
+
+    <table class="config-table">
+      <thead>
+        <tr>
+          <th>Variable</th>
+          <th>Default</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="env-key">KARN_MODEL</td><td class="env-default">llama2</td><td class="muted">Ollama model name used for LLM fallback inference</td></tr>
+        <tr><td class="env-key">KARN_VOICE_MODEL_PATH</td><td class="env-default">en_US-lessac-medium.onnx</td><td class="muted">Path to the Piper .onnx TTS voice model file</td></tr>
+        <tr><td class="env-key">KARN_DEFAULT_RETRY_COUNT</td><td class="env-default">2</td><td class="muted">How many times to retry a failed LLM or action call</td></tr>
+        <tr><td class="env-key">KARN_DEFAULT_RETRY_DELAY_SECONDS</td><td class="env-default">1.0</td><td class="muted">Seconds to wait between retry attempts</td></tr>
+        <tr><td class="env-key">KARN_MEMORY_STORE_PATH</td><td class="env-default">memory_store.json</td><td class="muted">JSON file where learned command mappings are persisted</td></tr>
+        <tr><td class="env-key">KARN_WEB_HOST</td><td class="env-default">127.0.0.1</td><td class="muted">Bind address for the Flask web panel</td></tr>
+        <tr><td class="env-key">KARN_WEB_PORT</td><td class="env-default">5000</td><td class="muted">Port for the web control panel</td></tr>
+        <tr><td class="env-key">KARN_AUTO_START_WEB_PANEL</td><td class="env-default">true</td><td class="muted">Automatically launch the web panel when main.py starts</td></tr>
+        <tr><td class="env-key">KARN_PROFILE_NAME</td><td class="env-default">—</td><td class="muted">Your name — used by the autofill form feature</td></tr>
+        <tr><td class="env-key">KARN_PROFILE_EMAIL</td><td class="env-default">—</td><td class="muted">Your email — used by the autofill form feature</td></tr>
+        <tr><td class="env-key">KARN_PROFILE_PHONE</td><td class="env-default">—</td><td class="muted">Your phone number — used by the autofill form feature</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- SECURITY -->
+  <section id="security">
+    <div class="section-label">Security</div>
+    <h2>Designed for safety by default</h2>
+    <p class="section-desc">Every execution path that touches your system has a guard. Nothing runs without you knowing about it.</p>
+
+    <div class="sec-grid">
+      <div class="sec-card">
+        <h4>🔐 PowerShell Confirm Gate</h4>
+        <p>Shell commands are placed in a queue and only executed after you provide a nonce token. An optional passphrase adds a second factor for destructive operations. The gate is always on by default.</p>
+      </div>
+      <div class="sec-card">
+        <h4>📁 Filesystem Sandboxing</h4>
+        <p>All file and folder operations are validated against the project base directory before execution. Commands attempting to escape the sandbox are rejected before they reach the OS.</p>
+      </div>
+      <div class="sec-card">
+        <h4>🖱️ OS Accessibility Permissions</h4>
+        <p>OCR and automation actions that interact with other applications require explicit OS-level accessibility permissions. Karn will not silently acquire these — your system's permission dialog always mediates access.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- TROUBLESHOOTING -->
+  <section id="troubleshooting">
+    <div class="section-label">Troubleshooting</div>
+    <h2>Common issues &amp; fixes</h2>
+
+    <div class="trouble-grid">
+      <div class="trouble-item">
+        <div><span class="trouble-tag">STT not starting</span></div>
+        <div class="trouble-fix">Re-run <code>python setup_offline_stt.py</code> and verify that Vosk and Whisper model paths are correct. Check that your microphone is accessible by the terminal process and that the VAD library is installed.</div>
+      </div>
+      <div class="trouble-item">
+        <div><span class="trouble-tag">No OCR features</span></div>
+        <div class="trouble-fix">Install <a href="https://github.com/UB-Mannheim/tesseract/wiki" style="color:var(--brand)">Tesseract OCR</a> and ensure the <code>tesseract</code> binary is available in your system PATH. On Windows, add the install directory (e.g., <code>C:\Program Files\Tesseract-OCR</code>) to PATH manually.</div>
+      </div>
+      <div class="trouble-item">
+        <div><span class="trouble-tag">LLM issues</span></div>
+        <div class="trouble-fix">Confirm the Ollama daemon is running (<code>ollama serve</code>) and that the model specified in <code>KARN_MODEL</code> has been pulled (<code>ollama list</code>). Check available RAM — large models like llama2 need at least 8 GB.</div>
+      </div>
+      <div class="trouble-item">
+        <div><span class="trouble-tag">Voice output broken</span></div>
+        <div class="trouble-fix">Verify the Piper <code>.onnx</code> model file path set in <code>KARN_VOICE_MODEL_PATH</code> is correct and the file exists. Check audio device permissions and ensure your default output device is active. Run a quick TTS test with <code>python -c "from core.tts import speak; speak('test')"</code>.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <div class="cta-banner">
+    <h2>Local. Private. Yours.</h2>
+    <p>Push this folder to GitHub and deploy as a static site — or just run it locally and keep your desktop intelligence fully offline. No cloud accounts, no subscriptions, no data leaving your machine.</p>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+      <a class="btn-primary" href="#quickstart">Get started now</a>
+      <a class="btn-ghost" href="https://ollama.ai" target="_blank">Get Ollama →</a>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="wrap" style="max-width:100%;padding:0;">
+    <div>
+      <div class="footer-brand">Karn<span> AI</span></div>
+      <div style="margin-top:4px;">Local-first automation — voice, memory, and safe execution defaults.</div>
+    </div>
+    <div style="text-align:right;">
+      <div>Developed by <strong style="color:var(--text)">Sujal Choudhary</strong></div>
+      <div style="margin-top:4px;">The Rabbit Organization</div>
+    </div>
+  </footer>
+
+</div><!-- /wrap -->
+
+<script>
+  // 3D tilt effect on feature cards
+  const cards = document.querySelectorAll('.feat-card');
+  cards.forEach(card => {
+    card.addEventListener('mousemove', e => {
+      const r = card.getBoundingClientRect();
+      const x = e.clientX - r.left;
+      const y = e.clientY - r.top;
+      const cx = r.width / 2, cy = r.height / 2;
+      const rx = ((y - cy) / cy) * -8;
+      const ry = ((x - cx) / cx) * 8;
+      card.style.setProperty('--rx', rx + 'deg');
+      card.style.setProperty('--ry', ry + 'deg');
+      card.style.setProperty('--mx', (x / r.width * 100) + '%');
+      card.style.setProperty('--my', (y / r.height * 100) + '%');
+      card.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg) translateZ(8px)`;
+    });
+    card.addEventListener('mouseleave', () => {
+      card.style.transform = '';
+    });
+  });
+
+  // Scroll-triggered fade-in
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.style.opacity = '1';
+        e.target.style.transform = 'translateY(0)';
+      }
+    });
+  }, { threshold: 0.12 });
+
+  document.querySelectorAll('.feat-card, .arch-step, .cmd-row, .sec-card, .trouble-item').forEach(el => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(20px)';
+    el.style.transition = 'opacity 0.55s ease, transform 0.55s ease';
+    obs.observe(el);
+  });
+</script>
+</body>
+</html>
